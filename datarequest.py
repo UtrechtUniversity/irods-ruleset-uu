@@ -1432,11 +1432,12 @@ def signed_dta_post_upload_actions_emails(ctx, request_id):
 
 def data_ready_emails(ctx, request_id):
     # Get (source data for) email input parameters
-    datarequest = json.loads(datarequest_get(ctx, request_id))
-    researcher  = datarequest['researchers']['contacts'][0]
+    datarequest       = json.loads(datarequest_get(ctx, request_id))
+    researcher        = datarequest['researchers']['contacts'][0]
+    datamanager_email = json.loads(ctx.uuGroupGetMembersAsJson(GROUP_DM, "")['arguments'][1])[0]
 
     # Send email
-    mail_data_ready(ctx, researcher['email'], researcher['name'], request_id)
+    mail_data_ready(ctx, researcher['email'], researcher['name'], datamanager_email, request_id)
 
 
 ###################################################
@@ -1812,15 +1813,15 @@ YOUth
 """.format(request_id, YODA_PORTAL_FQDN, request_id))
 
 
-def mail_data_ready(ctx, researcher_email, researcher_name, request_id):
+def mail_data_ready(ctx, researcher_email, researcher_name, datamanager_email, request_id):
     return mail.send(ctx,
                      to=researcher_email,
                      actor=user.full_name(ctx),
                      subject="YOUth data request {}: data ready".format(request_id),
                      body="""Dear {},
 
-The data you have requested is ready for you to download! [instructions here].
+The data you have requested is ready for you to download! For information on how to access the data through Yoda, see https://www.uu.nl/en/research/yoda/guide-to-yoda/i-want-to-start-using-yoda or contact the YOUth data manager ({}).
 
 With kind regards,
 YOUth
-""".format(researcher_name))
+""".format(researcher_name, datamanager_email))
