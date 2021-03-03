@@ -1421,8 +1421,7 @@ def dta_post_upload_actions_emails(ctx, request_id):
 
 def signed_dta_post_upload_actions_emails(ctx, request_id):
     # Get (source data for) email input parameters
-    datamanager_emails = ""
-    datamanager_emails = json.loads(ctx.uuGroupGetMembersAsJson(GROUP_DM, datamanager_emails)['arguments'][1])
+    datamanager_emails = json.loads(ctx.uuGroupGetMembersAsJson(GROUP_DM, "")['arguments'][1])
 
     # Send email
     for datamanager_email in datamanager_emails:
