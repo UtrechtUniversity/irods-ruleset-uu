@@ -1494,7 +1494,7 @@ def mail_preliminary_review_accepted(ctx, datamanager_email, request_id):
 
 Data request {} has been approved for review by the Board of Directors.
 
-You are now asked to review the data request for any potential problems concerning the requested data.
+You are now asked to review the data request for any potential problems concerning the requested data and to submit your recommendation (accept, resubmit, or reject) to the YOUth board of directors.
 
 The following link will take you directly to the review form: https://{}/datarequest/datamanagerreview/{}.
 

@@ -5,7 +5,7 @@
   "properties": {
     "datamanager_review": {
       "type": "string",
-      "title": "I advise that this data request be",
+      "title": "I recommend the YOUth board of directors that this data request be",
       "enum": [
         "Accepted",
         "Rejected (resubmit)",
