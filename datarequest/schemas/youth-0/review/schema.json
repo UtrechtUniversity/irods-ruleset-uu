@@ -33,7 +33,7 @@
     },
     "informed_consent_fit": {
       "type": "string",
-      "title": "How does the research question fit with the provided informed consent of the participants of YOUth?"
+      "title": "How does the research question fit with the provided informed consent of the participants of YOUth? (If in doubt please confer with the data manager and a privacy officer.)"
     },
     "research_question_answerability": {
       "type": "string",
