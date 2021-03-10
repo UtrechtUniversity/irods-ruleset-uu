@@ -1602,7 +1602,7 @@ def mail_assignment_accepted_researcher(ctx, researcher_email, researcher_name, 
                      subject="YOUth data request {}: assigned".format(request_id),
                      body="""Dear {},
 
-Your data request has been assigned for review by the YOUth data manager.
+Your data request has been assigned for review.
 
 The following link will take you directly to your data request: https://{}/datarequest/view/{}.
 
