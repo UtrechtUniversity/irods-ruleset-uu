@@ -37,6 +37,7 @@ __all__ = ['api_datarequest_browse',
            'api_datarequest_review_submit',
            'api_datarequest_reviews_get',
            'api_datarequest_evaluation_submit',
+           'api_datarequest_feedback_get',
            'api_datarequest_dta_post_upload_actions',
            'api_datarequest_signed_dta_post_upload_actions',
            'api_datarequest_data_ready']
@@ -67,6 +68,7 @@ DM_REVIEW         = "datamanager_review"
 REVIEW            = "review"
 ASSIGNMENT        = "assignment"
 EVALUATION        = "evaluation"
+FEEDBACK          = "feedback"
 DTA_FILENAME      = "dta.pdf"
 SIGDTA_FILENAME   = "dta_signed.pdf"
 
@@ -629,8 +631,10 @@ def api_datarequest_preliminary_review_submit(ctx, data, request_id):
     if decision == "Accepted for data manager review":
         status_set(ctx, request_id, status.PRELIMINARY_ACCEPT)
     elif decision == "Rejected":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.PRELIMINARY_REJECT)
     elif decision == "Rejected (resubmit)":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.PRELIMINARY_RESUBMIT)
     else:
         return api.Error("InvalidData", "Invalid value for preliminary_review in preliminary review JSON data.")
@@ -844,8 +848,10 @@ def api_datarequest_assignment_submit(ctx, data, request_id):
         assign_request(ctx, assignees, request_id)
         status_set(ctx, request_id, status.UNDER_REVIEW)
     elif decision == "Rejected":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.REJECTED_AFTER_DATAMANAGER_REVIEW)
     elif decision == "Rejected (resubmit)":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.RESUBMIT_AFTER_DATAMANAGER_REVIEW)
     else:
         return api.Error("InvalidData", "Invalid value for 'decision' key in datamanager review JSON data.")
@@ -1089,8 +1095,10 @@ def api_datarequest_evaluation_submit(ctx, data, request_id):
     if decision == "Approved":
         status_set(ctx, request_id, status.APPROVED)
     elif decision == "Rejected":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.REJECTED)
     elif decision == "Rejected (resubmit)":
+        datarequest_feedback_write(ctx, request_id, data['feedback_for_researcher'])
         status_set(ctx, request_id, status.RESUBMIT)
     else:
         return api.Error("InvalidData", "Invalid value for 'evaluation' key in evaluation JSON data.")
@@ -1107,6 +1115,67 @@ def datarequest_evaluation_get(ctx, request_id):
         return data_object.read(ctx, file_path)
     except error.UUError:
         return api.Error("ReadError", "Could not get assignment data.")
+
+
+def datarequest_feedback_write(ctx, request_id, feedback):
+    """ Write feedback to researcher to a separate file and grant the researcher read access
+
+    :param ctx:        Combined type of a callback and rei struct
+    :param request_id: Unique identifier of the data request
+    :param feedback:   String containing the feedback for the researcher
+    """
+    # Construct path to feedback file
+    coll_path = "/{}/{}/{}".format(user.zone(ctx), DRCOLLECTION, request_id)
+    feedback_path = "{}/{}".format(coll_path, FEEDBACK + JSON_EXT)
+
+    # Write data to feedback file
+    jsonutil.write(ctx, feedback_path, feedback)
+
+    # Get the username of the owner of the data request from iCAT
+    rows = row_iterator(["DATA_OWNER_NAME"],
+                        "DATA_NAME = '{}' and COLL_NAME like '{}'".format(DATAREQUEST + JSON_EXT, coll_path),
+                        AS_DICT, ctx)
+    request_owner_username = []
+    for row in rows:
+        request_owner_username.append(row["DATA_OWNER_NAME"])
+    # Check if exactly 1 owner was found. If not, return error
+    if len(request_owner_username) != 1:
+        return api.Error("MoreThanOneOwner", "Not exactly 1 owner found. Something is very wrong.")
+    request_owner_username = request_owner_username[0]
+
+    # Grant researcher read permissions
+    try:
+        msi.set_acl(ctx, "default", "read", request_owner_username,
+                    "{}/{}".format(coll_path, FEEDBACK + JSON_EXT))
+    except error.UUError:
+        return api.Error("PermissionError", "Could not grant read permissions on the feedback file to the data request owner.")
+
+
+@api.make()
+def api_datarequest_feedback_get(ctx, request_id):
+    """Get feedback for researcher
+
+    :param ctx:        Combined type of a callback and rei struct
+    :param request_id: Unique identifier of the data request
+
+    :returns:          JSON-foramtted string containing feedback for researcher
+    """
+    # Check if data request status is appropriate
+    status = status_get(ctx, request_id)
+    if not status in [status.PRELIMINARY_REJECT, status.PRELIMINARY_RESUBMIT,
+                      status.REJECTED_AFTER_DATAMANAGER_REVIEW,
+                      status.RESUBMIT_AFTER_DATAMANAGER_REVIEW, status.REJECTED, status.RESUBMIT]:
+        return api.Error("StatusError", "Inappropriate data request status.")
+
+    # Construct filename
+    coll_path = "/{}/{}/{}".format(user.zone(ctx), DRCOLLECTION, request_id)
+    file_path = "{}/{}".format(coll_path, FEEDBACK + JSON_EXT)
+
+    # Get the contents of the feedback JSON file
+    try:
+        return data_object.read(ctx, file_path)
+    except error.UUError as e:
+        return api.Error("ReadError", "Could not get feedback data: {}.".format(e))
 
 
 @api.make()
