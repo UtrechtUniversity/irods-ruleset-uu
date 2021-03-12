@@ -1114,7 +1114,7 @@ def datarequest_evaluation_get(ctx, request_id):
     try:
         return data_object.read(ctx, file_path)
     except error.UUError:
-        return api.Error("ReadError", "Could not get assignment data.")
+        return api.Error("ReadError", "Could not get evaluation data.")
 
 
 def datarequest_feedback_write(ctx, request_id, feedback):

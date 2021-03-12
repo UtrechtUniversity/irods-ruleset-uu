@@ -7,7 +7,7 @@
   "properties": {
     "evaluation": {
       "type": "string",
-      "title": "This data request is",
+      "title": "This data request is:",
       "enum": [
         "Approved",
         "Rejected (resubmit)",
