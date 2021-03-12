@@ -1123,6 +1123,8 @@ def datarequest_feedback_write(ctx, request_id, feedback):
     :param ctx:        Combined type of a callback and rei struct
     :param request_id: Unique identifier of the data request
     :param feedback:   String containing the feedback for the researcher
+
+    :returns:          API status
     """
     # Construct path to feedback file
     coll_path = "/{}/{}/{}".format(user.zone(ctx), DRCOLLECTION, request_id)
@@ -1162,7 +1164,7 @@ def api_datarequest_feedback_get(ctx, request_id):
     """
     # Check if data request status is appropriate
     status = status_get(ctx, request_id)
-    if not status in [status.PRELIMINARY_REJECT, status.PRELIMINARY_RESUBMIT,
+    if status not in [status.PRELIMINARY_REJECT, status.PRELIMINARY_RESUBMIT,
                       status.REJECTED_AFTER_DATAMANAGER_REVIEW,
                       status.RESUBMIT_AFTER_DATAMANAGER_REVIEW, status.REJECTED, status.RESUBMIT]:
         return api.Error("StatusError", "Inappropriate data request status.")
