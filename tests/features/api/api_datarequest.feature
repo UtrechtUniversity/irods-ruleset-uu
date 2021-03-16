@@ -158,6 +158,12 @@ Feature: Datarequest API
         Then the response status code is "200"
         And request status is "APPROVED"
 
+    Scenario: Datarequest feedback get
+        Given user "researcher" is authenticated
+        And datarequest exists
+        And the datarequest feedback get API is queried with request id
+        Then the response status code is "400"
+
     Scenario: Datarequest datamanager upload DTA
         Given user "datamanager" is authenticated
         And datarequest exists

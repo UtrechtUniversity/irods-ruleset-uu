@@ -239,6 +239,15 @@ def api_datarequest_evaluation_submit(user, datarequest_id):
     )
 
 
+@given('the datarequest feedback get API is queried with request id', target_fixture="api_response")
+def api_datarequest_feedback_get(user, datarequest_id):
+    return api_request(
+        user,
+        "datarequest_feedback_get",
+        {"request_id": datarequest_id}
+    )
+
+
 @given('DTA is uploaded', target_fixture="api_response")
 def api_datarequest_dta_upload(user, datarequest_id):
     return post_form_data(
